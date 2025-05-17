@@ -189,33 +189,43 @@ public class GrpcClientApplicationTests {
 		private ApplicationContext context;
 
 		@Autowired
-		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingStub specialBlockingServiceBlockingStub;
+		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingStub specialBlockingV2ServiceBlockingStub;
 
 		@Autowired
-		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingV2Stub specialBlockingServiceBlockingV2Stub;
+		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingV2Stub specialBlockingV2ServiceBlockingV2Stub;
 
 		@Autowired
-		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceFutureStub specialBlockingServiceFutureStub;
+		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceFutureStub specialBlockingV2ServiceFutureStub;
 
 		@Autowired
-		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceStub specialBlockingServiceStub;
+		private SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceStub specialBlockingV2ServiceStub;
 
 		@Test
 		void stubsCreatedWithRightName() {
-			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingStub.class).get("simpleBlockingStub"));
-			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingV2Stub.class).get("simpleBlockingV2Stub"));
-			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceFutureStub.class).get("simpleFutureStub"));
-			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceStub.class).get("simpleStub"));
+			assertNotNull(
+					context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingStub.class)
+						.get("specialBlockingV2ServiceBlockingStub"));
+			assertNotNull(
+					context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceBlockingV2Stub.class)
+						.get("specialBlockingV2ServiceBlockingV2Stub"));
+			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceFutureStub.class)
+				.get("specialBlockingV2ServiceFutureStub"));
+			assertNotNull(context.getBeansOfType(SpecialBlockingV2ServiceGrpc.SpecialBlockingV2ServiceStub.class)
+				.get("specialBlockingV2ServiceStub"));
 			// assertThat(context.getBeanNamesForType(AbstractStub.class)).hasSize(4);
 
 		}
 
 		@TestConfiguration
 		@ImportGrpcClients.Container(value = {
-				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class, factory = BlockingStubFactory.class),
-				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class, factory = BlockingV2StubFactory.class),
-				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class, factory = FutureStubFactory.class),
-				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class, factory = SimpleStubFactory.class), })
+				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class,
+						factory = BlockingStubFactory.class),
+				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class,
+						factory = BlockingV2StubFactory.class),
+				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class,
+						factory = FutureStubFactory.class),
+				@ImportGrpcClients(basePackageClasses = SpecialBlockingV2ServiceGrpc.class,
+						factory = SimpleStubFactory.class), })
 		static class TestConfig {
 
 		}
