@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.springframework.grpc.sample.proto";
+option java_outer_classname = "SpecialBlockingV2Proto";
+
+// The greeting service definition.
+service SpecialBlockingV2Service {
+    // Sends a greeting
+    rpc SayHello (SpecialBlockingV2Request) returns (SpecialBlockingV2Reply) {
+    }
+    rpc StreamHello(SpecialBlockingV2Request) returns (stream SpecialBlockingV2Reply) {}
+}
+
+// The request message containing the user's name.
+message SpecialBlockingV2Request {
+    string name = 1;
+}
+
+// The response message containing the greetings
+message SpecialBlockingV2Reply {
+    string message = 1;
+}
