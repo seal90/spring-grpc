@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import io.grpc.Channel;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -87,6 +88,14 @@ public class GrpcClientFactory {
 		Supplier<ManagedChannel> finalChannel = channel;
 		T client = (T) stubs.create(() -> finalChannel.get(), type);
 		return client;
+	}
+
+	public Channel getChannel(String target) {
+		Supplier<ManagedChannel> channel = this.options.get(target);
+		if (channel == null) {
+			channel = () -> channels().createChannel(target, ChannelBuilderOptions.defaults());
+		}
+		return channel.get();
 	}
 
 	/**

@@ -1,19 +1,35 @@
 package org.springframework.grpc.sample;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import io.grpc.CallOptions;
+import io.grpc.Channel;
+import io.grpc.ClientCall;
+import io.grpc.ClientInterceptor;
+import io.grpc.ForwardingClientCall;
+import io.grpc.ForwardingClientCallListener;
+import io.grpc.Metadata;
+import io.grpc.MethodDescriptor;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.grpc.autoconfigure.client.GrpcClient;
+import org.springframework.grpc.autoconfigure.client.GrpcClientAnnotationBeanPostProcessor;
 import org.springframework.grpc.client.BlockingStubFactory;
 import org.springframework.grpc.client.BlockingV2StubFactory;
 import org.springframework.grpc.client.FutureStubFactory;
+import org.springframework.grpc.client.GlobalClientInterceptor;
 import org.springframework.grpc.client.ImportGrpcClients;
 import org.springframework.grpc.client.SimpleStubFactory;
+import org.springframework.grpc.sample.proto.HelloReply;
+import org.springframework.grpc.sample.proto.HelloRequest;
 import org.springframework.grpc.sample.proto.SimpleGrpc;
 import org.springframework.grpc.test.AutoConfigureInProcessTransport;
 
@@ -177,6 +193,77 @@ public class GrpcClientApplicationTests {
 
 		}
 
+	}
+
+	@Nested
+	@SpringBootTest(properties = "spring.grpc.client.default-channel.address=0.0.0.0:9090")
+	@AutoConfigureInProcessTransport
+	@Configuration(proxyBeanMethods = false)
+	class GrpcClientAnnotation {
+
+		@Autowired
+		private ApplicationContext context;
+
+		@GrpcClient
+		private Channel channel;
+
+		@GrpcClient
+		private SimpleGrpc.SimpleBlockingStub simpleBlockingStub;
+
+		@TestConfiguration
+		static class Config {
+
+			@Bean
+			@GlobalClientInterceptor
+			public ClientInterceptor namePassingClientInterceptor() {
+				return new ClientInterceptor() {
+					@Override
+					public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,
+							CallOptions callOptions, Channel next) {
+
+						String name = callOptions.getOption(GrpcClientAnnotationBeanPostProcessor.CHANNEL_NAME_KEY);
+						assertEquals("default", name);
+
+						String proxyChannelName = callOptions
+							.getOption(GrpcClientAnnotationBeanPostProcessor.PROXY_CHANNEL_NAME_KEY);
+						assertEquals("", proxyChannelName);
+
+						return new ForwardingClientCall.SimpleForwardingClientCall<>(
+								next.newCall(method, callOptions)) {
+							@Override
+							public void start(Listener responseListener, Metadata headers) {
+
+								// Passing serviceName, if necessary you can use
+								// proxyChannelName to judge and use different keys to
+								// pass data
+								headers.put(Metadata.Key.of("USER_DEFINE_NAME", Metadata.ASCII_STRING_MARSHALLER),
+										name);
+
+								super.start(new ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(
+										responseListener) {
+									@Override
+									public void onHeaders(Metadata headers) {
+										String instance = headers.get(Metadata.Key.of("USER_DEFINE_INSTANCE_NAME",
+												Metadata.ASCII_STRING_MARSHALLER));
+										assertEquals("ONE", instance);
+										super.onHeaders(headers);
+									}
+								}, headers);
+							}
+						};
+					}
+				};
+			}
+
+		}
+
+		@Test
+		void stubAutowireSuccess() {
+			assertNotNull(channel);
+			assertNotNull(simpleBlockingStub);
+			HelloReply helloReply = simpleBlockingStub.sayHello(HelloRequest.newBuilder().setName("Alien").build());
+			assertEquals("Hello ==> Alien", helloReply.getMessage());
+		}
 	}
 
 }
